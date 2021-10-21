@@ -42,7 +42,7 @@
 #include <WiFi.h>
 
 /* on board led */
-#define LED_PIN 	19
+#define LED_PIN     19
 
 
 /*
@@ -87,7 +87,11 @@ void setup()
 
     Status_Setup();
 
+#ifdef ES8388_ENABLED
+    ES8388_Setup();
+#else
     ac101_setup();
+#endif
 
     setup_i2s();
 
@@ -120,7 +124,7 @@ void setup()
     Serial.printf("Total heap: %d\n", ESP.getHeapSize());
     Serial.printf("Free heap: %d\n", ESP.getFreeHeap());
 
-	/* PSRAM will be fully used by the looper */
+    /* PSRAM will be fully used by the looper */
     Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
 
@@ -128,13 +132,13 @@ void setup()
     xTaskCreatePinnedToCore(CoreTask0, "terminalTask", 8000, NULL, 999, &Core0TaskHnd, 0);
 }
 
-void CoreTask0( void *parameter )
+void CoreTask0(void *parameter)
 {
     while (true)
     {
         Status_Process();
-		
-		/* this seems necessary to trigger the watchdog */
+
+        /* this seems necessary to trigger the watchdog */
         delay(1);
         yield();
     }
