@@ -40,7 +40,7 @@
  */
 
 
-char statusMsg[128] = "\0"; /*!< buffer for top line message */
+char statusMsg[128] = ""; /*!< buffer for top line message */
 uint32_t status_cnt = 0; /*!< counter for timeout to reset top line */
 uint32_t loopMeterCount = 0; /*!< prescaler to reduce the serial output */
 
@@ -74,9 +74,9 @@ void Status_Setup(void)
  */
 void Status_PrintVu(float *value)
 {
-	/*
-	 * first pick a color
-	 */
+    /*
+     * first pick a color
+     */
     if (*value >= 0.7071f) /* -3dB */
     {
         Serial.printf("\033[0;31m"); /* red */
@@ -226,7 +226,7 @@ void Status_Process(void)
 void Status_ValueChangedFloat(const char *descr, float value)
 {
     status_cnt = 0;
-    sprintf(statusMsg, "%s: %0.2f\0", descr, value);
+    sprintf(statusMsg, "%s: %0.2f", descr, value);
 }
 
 /*
@@ -235,7 +235,7 @@ void Status_ValueChangedFloat(const char *descr, float value)
 void Status_ValueChangedInt(const char *descr, int value)
 {
     status_cnt = 0;
-    sprintf(statusMsg, "%s: %d\0", descr, value);
+    sprintf(statusMsg, "%s: %d", descr, value);
 }
 
 /*
@@ -244,5 +244,5 @@ void Status_ValueChangedInt(const char *descr, int value)
 void Status_TestMsg(const char *text)
 {
     status_cnt = 0;
-    sprintf(statusMsg, "%s\0", text);
+    sprintf(statusMsg, "%s", text);
 }

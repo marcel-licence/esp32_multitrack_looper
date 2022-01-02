@@ -1,6 +1,4 @@
 /*
- * The GNU GENERAL PUBLIC LICENSE (GNU GPLv3)
- *
  * Copyright (c) 2021 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,11 +36,27 @@
  * Author: Marcel Licence
  */
 
+#ifdef __CDT_PARSER__
+#include <cdt.h>
+#endif
+
+/*
+ *
+ /$$$$$$$$                     /$$       /$$                 /$$$$$$$   /$$$$$$  /$$$$$$$   /$$$$$$  /$$      /$$ /$$ /$$
+| $$_____/                    | $$      | $$                | $$__  $$ /$$__  $$| $$__  $$ /$$__  $$| $$$    /$$$| $$| $$
+| $$       /$$$$$$$   /$$$$$$ | $$$$$$$ | $$  /$$$$$$       | $$  \ $$| $$  \__/| $$  \ $$| $$  \ $$| $$$$  /$$$$| $$| $$
+| $$$$$   | $$__  $$ |____  $$| $$__  $$| $$ /$$__  $$      | $$$$$$$/|  $$$$$$ | $$$$$$$/| $$$$$$$$| $$ $$/$$ $$| $$| $$
+| $$__/   | $$  \ $$  /$$$$$$$| $$  \ $$| $$| $$$$$$$$      | $$____/  \____  $$| $$__  $$| $$__  $$| $$  $$$| $$|__/|__/
+| $$      | $$  | $$ /$$__  $$| $$  | $$| $$| $$_____/      | $$       /$$  \ $$| $$  \ $$| $$  | $$| $$\  $ | $$
+| $$$$$$$$| $$  | $$|  $$$$$$$| $$$$$$$/| $$|  $$$$$$$      | $$      |  $$$$$$/| $$  | $$| $$  | $$| $$ \/  | $$ /$$ /$$
+|________/|__/  |__/ \_______/|_______/ |__/ \_______/      |__/       \______/ |__/  |__/|__/  |__/|__/     |__/|__/|__/
+
+
+ */
+#include "config.h"
+
 #include <Arduino.h>
 #include <WiFi.h>
-
-/* on board led */
-#define LED_PIN     19
 
 
 /*
@@ -58,11 +72,6 @@
  *
  */
 
-/* our samplerate */
-#define SAMPLE_RATE 44100
-
-/* this is used to add a task to core 0 */
-TaskHandle_t  Core0TaskHnd ;
 
 /* to avoid the high click when turning on the microphone */
 static float click_supp_gain = 0.0f;
@@ -83,19 +92,25 @@ void setup()
 
     click_supp_gain = 0.0f;
 
+#ifdef BLINK_LED_PIN
     Blink_Setup();
-
+#endif
     Status_Setup();
 
+#ifdef ESP32_AUDIO_KIT
 #ifdef ES8388_ENABLED
     ES8388_Setup();
 #else
     ac101_setup();
+    /* using mic as default source */
+    ac101_setSourceMic();
+#endif
 #endif
 
     setup_i2s();
-
+#ifdef ESP32_AUDIO_KIT
     button_setup();
+#endif
 
     /*
      * setup midi module / rx port
@@ -108,8 +123,10 @@ void setup()
     WiFi.mode(WIFI_OFF);
 #endif
 
+#ifndef ESP8266
     btStop();
     // esp_wifi_deinit();
+#endif
 
     Delay_Init();
     Delay_Reset();
@@ -128,21 +145,53 @@ void setup()
     Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
 
-    /* we need a second task for the terminal output */
-    xTaskCreatePinnedToCore(CoreTask0, "terminalTask", 8000, NULL, 999, &Core0TaskHnd, 0);
+#ifdef ESP32
+    Core0TaskInit();
+#else
+#error only supported by ESP32 platform
+#endif
 }
 
-void CoreTask0(void *parameter)
+#ifdef ESP32
+/*
+ * Core 0
+ */
+/* this is used to add a task to core 0 */
+TaskHandle_t Core0TaskHnd ;
+
+inline
+void Core0TaskInit()
 {
+    /* we need a second task for the terminal output */
+    xTaskCreatePinnedToCore(Core0Task, "CoreTask0", 8000, NULL, 999, &Core0TaskHnd, 0);
+}
+
+inline
+void Core0TaskSetup()
+{
+
+}
+
+inline
+void Core0TaskLoop()
+{
+    Status_Process();
+}
+
+void Core0Task(void *parameter)
+{
+    Core0TaskSetup();
+
     while (true)
     {
-        Status_Process();
+        Core0TaskLoop();
 
         /* this seems necessary to trigger the watchdog */
         delay(1);
         yield();
     }
 }
+#endif
 
 float main_gain = 1.0f;
 
@@ -232,13 +281,17 @@ void MTLooper_ToggleSource(uint8_t channel, float value)
         {
         case acSrcLine:
             click_supp_gain = 0.0f;
+#ifdef AC101_ENABLED
             ac101_setSourceMic();
+#endif
             selSource = acSrcMic;
             Status_TestMsg("Input: Microphone");
             break;
         case acSrcMic:
             click_supp_gain = 0.0f;
+#ifdef AC101_ENABLED
             ac101_setSourceLine();
+#endif
             selSource = acSrcLine;
             Status_TestMsg("Input: LineIn");
             break;
@@ -315,13 +368,10 @@ inline void audio_task()
  */
 void loop_1Hz(void)
 {
-    static uint32_t cycl = ESP.getCycleCount();
-    static uint32_t lastCycl;
-
-    lastCycl = cycl;
-
     button_loop();
+#ifdef BLINK_LED_PIN
     Blink_Process();
+#endif
 }
 
 static uint32_t midi_pre_scaler = 0;

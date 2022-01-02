@@ -1,6 +1,4 @@
 /*
- * The GNU GENERAL PUBLIC LICENSE (GNU GPLv3)
- *
  * Copyright (c) 2021 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
@@ -30,11 +28,23 @@
  * Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
  */
 
-/*
- * a simple implementation to use midi
+/**
+ * @file midi_interface.ino
+ * @author Marcel Licence
+ * @date 04.10.2021
  *
- * Author: Marcel Licence
+ * @brief This file contains an implementation of a simple MIDI interpreter to parse incoming messages
+ *
+ * MIDI_DUMP_Serial1_TO_SERIAL <- when active received data will be output as hex on serial(1)
+ * MIDI_SERIAL1_BAUDRATE <- use define to override baud-rate for MIDI, otherwise default of 31250 will be used
+ *
+ * @see https://www.midi.org/specifications-old/item/table-1-summary-of-midi-message
  */
+
+
+#ifdef __CDT_PARSER__
+#include <cdt.h>
+#endif
 
 
 /*
@@ -42,14 +52,59 @@
  * to convert the MIDI din signal to
  * a uart compatible signal
  */
-#if 0
-#define RXD2 16 /* U2RRXD */
-#define TXD2 17
-#else
-#define RXD2 22
-#define TXD2 21
+
+#ifndef MIDI_SERIAL1_BAUDRATE
+#define MIDI_SERIAL1_BAUDRATE   31250
 #endif
 
+#ifndef MIDI_SERIAL2_BAUDRATE
+#define MIDI_SERIAL2_BAUDRATE   31250
+#endif
+
+/* use define to dump midi data */
+//#define MIDI_DUMP_SERIAL2_TO_SERIAL
+
+
+#if (defined MIDI_RX_PIN) || (defined MIDI_RECV_FROM_SERIAL)
+#define MIDI_PORT_ACTIVE
+#endif
+
+#ifdef MIDI_RX1_PIN
+#define MIDI_PORT1_ACTIVE
+#endif
+
+#ifdef MIDI_RX2_PIN
+#define MIDI_PORT2_ACTIVE
+#endif
+
+struct midi_port_s
+{
+    Stream *serial; /* this can be software or hardware serial */
+    uint32_t inMsgWd ;
+    uint8_t inMsg[3];
+    uint8_t inMsgIndex ;
+};
+
+#ifdef ARDUINO_DAISY_SEED
+HardwareSerial Serial2(USART1);
+#endif
+
+#ifdef ARDUINO_GENERIC_F407VGTX
+HardwareSerial Serial2(USART3); /* PB11 */
+#endif
+
+
+#ifdef MIDI_PORT_ACTIVE
+struct midi_port_s MidiPort;
+#endif
+
+#ifdef MIDI_PORT1_ACTIVE
+struct midi_port_s MidiPort1;
+#endif
+
+#ifdef MIDI_PORT2_ACTIVE
+struct midi_port_s MidiPort2;
+#endif
 
 /*
  * structure is used to build the mapping table
@@ -60,98 +115,65 @@ struct midiControllerMapping
     uint8_t data1;
     const char *desc;
     void(*callback_mid)(uint8_t ch, uint8_t data1, uint8_t data2);
+#ifdef MIDI_FMT_INT
+    void(*callback_val)(uint8_t userdata, uint8_t value);
+#else
     void(*callback_val)(uint8_t userdata, float value);
+#endif
     uint8_t user_data;
 };
 
-/*
- * this mapping is used for the edirol pcr-800
- * this should be changed when using another controller
- */
-struct midiControllerMapping edirolMapping[] =
+struct midiMapping_s
 {
-    { 0x8, 0x52, "back", NULL, Loop_ResetToStart, 0},
-    { 0x8, 0x52, "back", NULL, Click_Reset, 0},
-    { 0xD, 0x52, "stop", NULL, Loop_Stop, 0},
-    { 0xe, 0x52, "start", NULL, Loop_PlayNormal, 0},
-    { 0xe, 0x52, "start", NULL, Loop_StartAll, 0},
-    { 0xa, 0x52, "rec", NULL, Loop_SetLength, 0},
+    void (*rawMsg)(uint8_t *msg);
+#ifdef MIDI_FMT_INT
+    void (*noteOn)(uint8_t ch, uint8_t note, uint8_t vel);
+    void (*noteOff)(uint8_t ch, uint8_t note);
+    void (*pitchBend)(uint8_t ch, uint8_t bend);
+    void (*modWheel)(uint8_t ch, uint8_t value);
+#else
+    void (*noteOn)(uint8_t ch, uint8_t note, float vel);
+    void (*noteOff)(uint8_t ch, uint8_t note);
+    void (*pitchBend)(uint8_t ch, float bend);
+    void (*modWheel)(uint8_t ch, float value);
+#endif
+    void (*rttMsg)(uint8_t msg);
+    void (*songPos)(uint16_t pos);
 
-    /* upper row of buttons */
-    { 0x0, 0x50, "A1", NULL, Loop_SelectTrack, 0},
-    { 0x1, 0x50, "A2", NULL, Loop_SelectTrack, 1},
-    { 0x2, 0x50, "A3", NULL, Loop_SelectTrack, 2},
-    { 0x3, 0x50, "A4", NULL, Loop_SelectTrack, 3},
-
-    { 0x4, 0x50, "A5", NULL, Click_ToggleOnOff, 0},
-    { 0x5, 0x50, "A6", NULL, Loop_JumpPosQuarter, 1},
-    { 0x6, 0x50, "A7", NULL, Loop_JumpPosQuarter, 2},
-    { 0x7, 0x50, "A8", NULL, Loop_JumpPosQuarter, 3},
-    { 0x5, 0x50, "A6", NULL, Click_JumpPosQuarter, 1},
-    { 0x6, 0x50, "A7", NULL, Click_JumpPosQuarter, 2},
-    { 0x7, 0x50, "A8", NULL, Click_JumpPosQuarter, 3},
-
-    { 0x0, 0x53, "A9", NULL, Click_OnOff, 0},
-
-    /* lower row of buttons */
-    { 0x0, 0x51, "B1", NULL, Loop_StopChannel, 0},
-    { 0x1, 0x51, "B2", NULL, Loop_StopChannel, 1},
-    { 0x2, 0x51, "B3", NULL, Loop_StopChannel, 2},
-    { 0x3, 0x51, "B4", NULL, Loop_StopChannel, 3},
-
-    { 0x4, 0x51, "B5", NULL, Loop_EraseTrack, 0},
-    { 0x5, 0x51, "B6", NULL, Loop_EraseTrack, 1},
-    { 0x6, 0x51, "B7", NULL, Loop_EraseTrack, 2},
-    { 0x7, 0x51, "B8", NULL, Loop_EraseTrack, 3},
-
-    { 0x1, 0x53, "B9", NULL, MTLooper_ToggleSource, 0},
-
-    /* pedal */
-    { 0x0, 0x0b, "VolumePedal", NULL, NULL, 0},
-
-    { 0x0, 0x11, "S1", NULL, Loop_SetChannelGainOut, 0},
-    { 0x1, 0x11, "S2", NULL, Loop_SetChannelGainOut, 1},
-    { 0x2, 0x11, "S3", NULL, Loop_SetChannelGainOut, 2},
-    { 0x3, 0x11, "S4", NULL, Loop_SetChannelGainOut, 3},
-
-    { 0x4, 0x11, "S5", NULL, NULL, 0},
-    { 0x5, 0x11, "S6", NULL, NULL, 0},
-    { 0x6, 0x11, "S7", NULL, NULL, 0},
-    { 0x7, 0x11, "S8", NULL, NULL, 0},
-
-    /* rotary */
-    { 0x0, 0x10, "R1", NULL, Loop_SetChannelPan, 0},
-    { 0x1, 0x10, "R2", NULL, Loop_SetChannelPan, 1},
-    { 0x2, 0x10, "R3", NULL, Loop_SetChannelPan, 2},
-    { 0x3, 0x10, "R4", NULL, Loop_SetChannelPan, 3},
-
-    { 0x4, 0x10, "R5", NULL, NULL, 0},
-    { 0x5, 0x10, "R6", NULL, NULL, 0},
-    { 0x6, 0x10, "R7", NULL, Click_SetTempo, 0},
-    { 0x7, 0x10, "R8", NULL, Loop_SetSpeed, 0},
-
-    { 0x0, 0x12, "R9", NULL, Loop_SetChannelGainIn, 0},
+    struct midiControllerMapping *controlMapping;
+    int mapSize;
 };
 
-
-
-
-
-/* use define to dump midi data */
-//#define DUMP_SERIAL2_TO_SERIAL
+extern struct midiMapping_s midiMapping; /* definition in z_config.ino */
 
 /* constant to normalize midi value to 0.0 - 1.0f */
-#define NORM127MUL	0.007874f
+#define NORM127MUL  0.007874f
 
-inline void Midi_NoteOn(uint8_t ch, uint8_t note)
+inline void Midi_NoteOn(uint8_t ch, uint8_t note, uint8_t vel)
 {
-    Loop_NoteOn(ch, note);
-    //  Synth_NoteOn(note);
+    if (vel > 127)
+    {
+        /* we will end up here in case of problems with the MIDI connection */
+        vel = 127;
+        Serial.printf("to loud note detected!!!!!!!!!!!!!!!!!!!!!!!\n");
+    }
+
+    if (midiMapping.noteOn != NULL)
+    {
+#ifdef MIDI_FMT_INT
+        midiMapping.noteOn(ch, note, vel);
+#else
+        midiMapping.noteOn(ch, note, pow(2, ((vel * NORM127MUL) - 1.0f) * 6));
+#endif
+    }
 }
 
 inline void Midi_NoteOff(uint8_t ch, uint8_t note)
 {
-    //  Synth_NoteOff(note);
+    if (midiMapping.noteOff != NULL)
+    {
+        midiMapping.noteOff(ch, note);
+    }
 }
 
 /*
@@ -159,56 +181,59 @@ inline void Midi_NoteOff(uint8_t ch, uint8_t note)
  */
 inline void Midi_ControlChange(uint8_t channel, uint8_t data1, uint8_t data2)
 {
-    for (int i = 0; i < (sizeof(edirolMapping) / sizeof(edirolMapping[0])); i++)
+    for (int i = 0; i < midiMapping.mapSize; i++)
     {
-        if ((edirolMapping[i].channel == channel) && (edirolMapping[i].data1 == data1))
+        if ((midiMapping.controlMapping[i].channel == channel) && (midiMapping.controlMapping[i].data1 == data1))
         {
-            if (edirolMapping[i].callback_mid != NULL)
+            if (midiMapping.controlMapping[i].callback_mid != NULL)
             {
-                edirolMapping[i].callback_mid(channel, data1, data2);
+                midiMapping.controlMapping[i].callback_mid(channel, data1, data2);
             }
-            if (edirolMapping[i].callback_val != NULL)
+            if (midiMapping.controlMapping[i].callback_val != NULL)
             {
-                edirolMapping[i].callback_val(edirolMapping[i].user_data, (float)data2 * NORM127MUL);
-            }
-        }
-    }
-
-    if (data1 == 17)
-    {
-        if (channel < 10)
-        {
-            Synth_SetSlider(channel,  data2 * NORM127MUL);
-        }
-    }
-#if 0
-    if (data1 == 17)
-    {
-        if (channel < 10)
-        {
-            Synth_SetSlider(channel,  data2 * NORM127MUL);
-        }
-    }
-    if ((data1 == 18) && (channel == 1))
-    {
-        Synth_SetSlider(8,  data2 * NORM127MUL);
-    }
+#ifdef MIDI_FMT_INT
+                midiMapping.controlMapping[i].callback_val(midiMapping.controlMapping[i].user_data, data2);
+#else
+                midiMapping.controlMapping[i].callback_val(midiMapping.controlMapping[i].user_data, (float)data2 * NORM127MUL);
 #endif
-    if ((data1 == 16) && (channel < 9))
-    {
-        Synth_SetRotary(channel, data2 * NORM127MUL);
-
+            }
+        }
     }
-    if ((data1 == 18) && (channel == 0))
+
+    if (data1 == 1)
     {
-        Synth_SetRotary(8,  data2 * NORM127MUL);
+        if (midiMapping.modWheel != NULL)
+        {
+#ifdef MIDI_FMT_INT
+            midiMapping.modWheel(channel, data2);
+#else
+            midiMapping.modWheel(channel, (float)data2 * NORM127MUL);
+#endif
+        }
+    }
+}
+
+inline void Midi_PitchBend(uint8_t ch, uint16_t bend)
+{
+    float value = ((float)bend - 8192.0f) * (1.0f / 8192.0f) - 1.0f;
+    if (midiMapping.pitchBend != NULL)
+    {
+        midiMapping.pitchBend(ch, value);
+    }
+}
+
+inline void Midi_SongPositionPointer(uint16_t pos)
+{
+    if (midiMapping.songPos != NULL)
+    {
+        midiMapping.songPos(pos);
     }
 }
 
 /*
  * function will be called when a short message has been received over midi
  */
-inline void HandleShortMsg(uint8_t *data)
+inline void Midi_HandleShortMsg(uint8_t *data, uint8_t cable __attribute__((unused)))
 {
     uint8_t ch = data[0] & 0x0F;
 
@@ -218,7 +243,7 @@ inline void HandleShortMsg(uint8_t *data)
     case 0x90:
         if (data[2] > 0)
         {
-            Midi_NoteOn(ch, data[1]);
+            Midi_NoteOn(ch, data[1], data[2]);
         }
         else
         {
@@ -232,77 +257,212 @@ inline void HandleShortMsg(uint8_t *data)
     case 0xb0:
         Midi_ControlChange(ch, data[1], data[2]);
         break;
+    /* pitchbend */
+    case 0xe0:
+        Midi_PitchBend(ch, ((((uint16_t)data[1])) + ((uint16_t)data[2] << 8)));
+        break;
+    /* song position pointer */
+    case 0xf2:
+        Midi_SongPositionPointer(((((uint16_t)data[1])) + ((uint16_t)data[2] << 8)));
+        break;
     }
+}
+
+inline void Midi_RealTimeMessage(uint8_t msg)
+{
+    if (midiMapping.rttMsg != NULL)
+    {
+        midiMapping.rttMsg(msg);
+    }
+}
+
+static void Midi_PortSetup(struct midi_port_s *port)
+{
+    /* reset the watchdog variables */
+    port->inMsgWd = 0;
+    memset(port->inMsg, 0, sizeof(port->inMsg));
+    port->inMsgIndex = 0;
 }
 
 void Midi_Setup()
 {
-    Serial2.begin(31250, SERIAL_8N1, RXD2, TXD2);
-    pinMode(RXD2, INPUT_PULLUP);  /* 25: GPIO 16, u2_RXD */
+#ifdef MIDI_RECV_FROM_SERIAL
+    MidiPort.serial = &Serial;
+#endif /* MIDI_RECV_FROM_SERIAL */
+
+#ifdef MIDI_PORT_ACTIVE
+#ifdef SWAP_SERIAL
+    Serial.printf("Switch Serial to Midi!\n");
+    delay(20);
+    Serial.end();
+    Serial.begin(MIDI_BAUDRATE);
+    Serial.swap(); /* using alternative rx and tx pin for Midi communication */
+    delay(20);
+#endif
+    MidiPort.serial = &Serial;
+    Midi_PortSetup(&MidiPort);
+#endif
+
+#ifdef MIDI_PORT1_ACTIVE
+
+#ifdef MIDI_RX1_PIN
+#ifdef MIDI_TX1_PIN
+    Serial.printf("Setup Serial1 with %d baud with rx: %d and tx %d\n", MIDI_SERIAL1_BAUDRATE, MIDI_RX1_PIN, MIDI_TX1_PIN);
+    Serial1.begin(MIDI_SERIAL1_BAUDRATE, SERIAL_8N1, MIDI_RX1_PIN, MIDI_TX1_PIN);
+#else
+    Serial.printf("Setup Serial1 with %d baud with rx: %d only\n", MIDI_SERIAL1_BAUDRATE, MIDI_RX1_PIN);
+    Serial1.begin(MIDI_SERIAL1_BAUDRATE, SERIAL_8N1, MIDI_RX1_PIN);
+#endif
+    pinMode(MIDI_RX1_PIN, INPUT_PULLUP); /* can be connected to open collector output */
+#else
+    Serial.printf("Setup Serial1 with %d baud with rx: RX1 pin\n", MIDI_SERIAL1_BAUDRATE);
+    Serial1.begin(MIDI_SERIAL1_BAUDRATE);
+#endif
+
+#ifdef ARDUINO_SEEED_XIAO_M0
+    pinMode(PIN_SERIAL1_RX, INPUT_PULLUP);
+#endif
+
+    MidiPort1.serial = &Serial1;
+    Midi_PortSetup(&MidiPort1);
+#endif /* MIDI_PORT1_ACTIVE */
+
+
+#ifdef MIDI_PORT2_ACTIVE
+
+#ifdef MIDI_RX2_PIN
+#ifdef MIDI_TX2_PIN
+    Serial.printf("Setup Serial2 with %d baud with rx: %d and tx %d\n", MIDI_SERIAL2_BAUDRATE, MIDI_RX2_PIN, MIDI_TX2_PIN);
+    Serial2.begin(MIDI_SERIAL2_BAUDRATE, SERIAL_8N1, MIDI_RX2_PIN, MIDI_TX2_PIN);
+#else
+    Serial.printf("Setup Serial2 with %d baud with rx: %d only\n", MIDI_SERIAL2_BAUDRATE, MIDI_RX2_PIN);
+    Serial2.begin(MIDI_SERIAL2_BAUDRATE, SERIAL_8N1, MIDI_RX2_PIN);
+#endif
+    pinMode(MIDI_RX2_PIN, INPUT_PULLUP); /* can be connected to open collector output */
+#else
+    Serial.printf("Setup Serial2 with %d baud with rx: RX2 pin\n", MIDI_SERIAL2_BAUDRATE);
+    Serial2.begin(MIDI_SERIAL2_BAUDRATE);
+#endif
+
+    MidiPort2.serial = &Serial2;
+    Midi_PortSetup(&MidiPort2);
+    Serial.printf("Setup MidiPort2 using Serial2\n");
+#endif /* MIDI_PORT2_ACTIVE */
 }
 
-/*
- * this function should be called continuously to ensure that incoming messages can be processed
- */
-void Midi_Process()
+void Midi_CheckMidiPort(struct midi_port_s *port)
 {
-    /*
-     * watchdog to avoid getting stuck by receiving incomplete or wrong data
-     */
-    static uint32_t inMsgWd = 0;
-    static uint8_t inMsg[3];
-    static uint8_t inMsgIndex = 0;
-
     //Choose Serial1 or Serial2 as required
 
-    if (Serial2.available())
+    if (port->serial->available())
     {
-        uint8_t incomingByte = Serial2.read();
+        uint8_t incomingByte = port->serial->read();
 
-#ifdef DUMP_SERIAL2_TO_SERIAL
+#ifdef MIDI_DUMP_SERIAL2_TO_SERIAL
         Serial.printf("%02x", incomingByte);
 #endif
         /* ignore live messages */
         if ((incomingByte & 0xF0) == 0xF0)
         {
+            Midi_RealTimeMessage(incomingByte);
             return;
         }
 
-        if (inMsgIndex == 0)
+        if (port->inMsgIndex == 0)
         {
             if ((incomingByte & 0x80) != 0x80)
             {
-                inMsgIndex = 1;
+                port->inMsgIndex = 1;
             }
         }
 
-        inMsg[inMsgIndex] = incomingByte;
-        inMsgIndex += 1;
+        port->inMsg[port->inMsgIndex] = incomingByte;
+        port->inMsgIndex += 1;
 
-        if (inMsgIndex >= 3)
+        if ((port->inMsgIndex >= 3) ||
+                (
+                    (((port->inMsg[0] & 0xF0) == 0xD0)
+                     || ((port->inMsg[0] & 0xF0) == 0xC0))
+                    && (port->inMsgIndex >= 2))
+           )
         {
-#ifdef DUMP_SERIAL2_TO_SERIAL
-            Serial.printf(">%02x %02x %02x\n", inMsg[0], inMsg[1], inMsg[2]);
+#ifdef MIDI_DUMP_SERIAL2_TO_SERIAL
+            if (port->inMsgIndex >= 3)
+            {
+                Serial.printf("\n>%02x %02x %02x<\n", port->inMsg[0], port->inMsg[1], port->inMsg[2]);
+            }
+            else
+            {
+                Serial.printf("\n>%02x %02x<\n", port->inMsg[0], port->inMsg[1]);
+            }
 #endif
-            HandleShortMsg(inMsg);
-            inMsgIndex = 0;
+            Midi_HandleShortMsg(port->inMsg, 0);
+            port->inMsgIndex = 0;
         }
 
         /*
          * reset watchdog to allow new bytes to be received
          */
-        inMsgWd = 0;
+        port->inMsgWd = 0;
     }
     else
     {
-        if (inMsgIndex > 0)
+        if (port->inMsgIndex > 0)
         {
-            inMsgWd++;
-            if (inMsgWd == 0xFFF)
+            port->inMsgWd++;
+            if (port->inMsgWd == 0xFFF)
             {
-                inMsgIndex = 0;
+                port->inMsgIndex = 0;
             }
         }
     }
 }
+
+/*
+ * this function should be called continuously to ensure that incoming messages can be processed
+ */
+inline
+void Midi_Process()
+{
+#ifdef MIDI_PORT_ACTIVE
+    Midi_CheckMidiPort(&MidiPort);
+#endif
+#ifdef MIDI_PORT1_ACTIVE
+    Midi_CheckMidiPort(&MidiPort1);
+#endif
+#ifdef MIDI_PORT2_ACTIVE
+    Midi_CheckMidiPort(&MidiPort2);
+#endif
+}
+
+#ifndef ARDUINO_SEEED_XIAO_M0
+#ifndef SWAP_SERIAL
+void Midi_SendShortMessage(uint8_t *msg)
+{
+#ifdef MIDI_TX2_PIN
+    MidiPort2.serial->write(msg, 3);
+#endif
+}
+
+void Midi_SendRaw(uint8_t *msg)
+{
+#ifdef MIDI_TX2_PIN
+    /* sysex */
+    if (msg[0] == 0xF0)
+    {
+        int i = 2;
+        while (msg[i] != 0xF7)
+        {
+            i++;
+        }
+        MidiPort2.serial->write(msg, i + 1);
+    }
+    else
+    {
+        MidiPort2.serial->write(msg, 3);
+    }
+#endif
+}
+#endif
+#endif
 

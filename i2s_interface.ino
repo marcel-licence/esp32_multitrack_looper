@@ -132,12 +132,10 @@ bool i2s_write_stereo_samples(float *fl_sample, float *fr_sample)
     } sampleDataU;
 #endif
 
-
     sampleDataU.ch[0] = int16_t(*fl_sample * 16383.0f);
     sampleDataU.ch[1] = int16_t(*fr_sample * 16383.0f);
 
     static size_t bytes_written = 0;
-    static size_t bytes_read = 0;
 
     i2s_write(i2s_num, (const char *)&sampleDataU.sample, 4, &bytes_written, portMAX_DELAY);
 
@@ -153,9 +151,7 @@ bool i2s_write_stereo_samples(float *fl_sample, float *fr_sample)
 
 void i2s_read_stereo_samples(float *fl_sample, float *fr_sample)
 {
-    static size_t bytes_written = 0;
     static size_t bytes_read = 0;
-
 
     static union
     {

@@ -73,26 +73,26 @@ void Click_Process(float *left, float *right)
             {
                 if (seq_bar == 0)
                 {
-					/* create highest pitch sound for the first beat of the first bar */
+                    /* create highest pitch sound for the first beat of the first bar */
                     *left += ((float)((seq_counter & 16) / 16)) * 0.1f;
                     *right += ((float)((seq_counter & 16) / 16)) * 0.1f;
                 }
                 else
                 {
-					/* generate middle pitched sound for the first beat of all other bars */
+                    /* generate middle pitched sound for the first beat of all other bars */
                     *left += ((float)((seq_counter & 32) / 32)) * 0.1f;
                     *right += ((float)((seq_counter & 32) / 32)) * 0.1f;
                 }
             }
             else if ((seq_pos % 4) == 0)
             {
-				/* generate sound with lowest pitch for 2, 3, 4 */
+                /* generate sound with lowest pitch for 2, 3, 4 */
                 *left += ((float)((seq_counter & 64) / 64)) * 0.1f;
                 *right += ((float)((seq_counter & 64) / 64)) * 0.1f;
             }
         }
 
-		/* only if module is active the loop should be reset when jumping to first beat in first bar */
+        /* only if module is active the loop should be reset when jumping to first beat in first bar */
         if (seq_tempo)
         {
             if ((seq_pos == 0) && (seq_counter == 0) && (seq_bar == 0))

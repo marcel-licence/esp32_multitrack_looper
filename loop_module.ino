@@ -37,9 +37,9 @@
  */
 
 
-/* 
- * MAX_LOOP can only increased by decreasing TRACK_CNT (track count) 
- * 
+/*
+ * MAX_LOOP can only increased by decreasing TRACK_CNT (track count)
+ *
  * for example using only 2 tracks will allow MAX_LOOP to be set to 1026492
  * all PSRAM memory will be used
  * if values are set to big the startup of the firmware will fail
@@ -76,7 +76,7 @@ void Loop_init(void)
 
         if (loopLine[n] == NULL)
         {
-			/* when you see the message the count of TRACK_CNT is too high or MAX_LOOP is too big */
+            /* when you see the message the count of TRACK_CNT is too high or MAX_LOOP is too big */
             Serial.printf("not enough memory!\n");
             return;
         }
@@ -197,7 +197,7 @@ void Loop_Process(float *signal_l, float *signal_r)
 
     for (int n = 0; n < TRACK_CNT; n++)
     {
-		/* stop erasing when final position has been reached */
+        /* stop erasing when final position has been reached */
         if (loopErase[n] == loopIn)
         {
             loopErase[n] = 0xFFFFFFFFUL;
