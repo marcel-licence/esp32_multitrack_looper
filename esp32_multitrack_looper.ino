@@ -100,6 +100,7 @@ void setup()
 #ifdef ESP32_AUDIO_KIT
 #ifdef ES8388_ENABLED
     ES8388_Setup();
+    ES8388_SetIn2OoutVOL(0, 0);
 #else
     ac101_setup();
     /* using mic as default source */
@@ -176,6 +177,7 @@ inline
 void Core0TaskLoop()
 {
     Status_Process();
+    button_loop();
 }
 
 void Core0Task(void *parameter)
@@ -368,7 +370,6 @@ inline void audio_task()
  */
 void loop_1Hz(void)
 {
-    button_loop();
 #ifdef BLINK_LED_PIN
     Blink_Process();
 #endif
@@ -400,5 +401,33 @@ void loop()
          */
         Midi_Process();
         midi_pre_scaler = 0;
+    }
+}
+
+void App_ButtonCb(uint8_t key, uint8_t down)
+{
+    if (down > 0)
+    {
+        switch (key)
+        {
+        case 0:
+            Loop_SetLength(0, 1);
+            break;
+        case 1:
+            Click_ToggleOnOff(0, 1);
+            break;
+        case 2:
+            Loop_SelectTrack(0, 1);
+            break;
+        case 3:
+            Loop_SelectTrack(1, 1);
+            break;
+        case 4:
+            Loop_SelectTrack(2, 1);
+            break;
+        case 5:
+            Loop_SelectTrack(3, 1);
+            break;
+        }
     }
 }

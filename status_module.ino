@@ -1,6 +1,4 @@
 /*
- * The GNU GENERAL PUBLIC LICENSE (GNU GPLv3)
- *
  * Copyright (c) 2021 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
@@ -46,7 +44,7 @@ uint32_t loopMeterCount = 0; /*!< prescaler to reduce the serial output */
 
 float *meter; /* pointer to vu meter information */
 
-#define VU_MAX	24 /*!< character length of vu meter */
+#define VU_MAX  24 /*!< character length of vu meter */
 
 float statusVuLookup[VU_MAX]; /*!< precalculated lookup */
 
@@ -169,7 +167,7 @@ void Status_PrintAll(void)
     Serial.printf("--------------------------------\n");
     for (int i = 0; i < 32; i++)
     {
-        if ( i == (int)(Loop_GetRelPos() * 32.0f))
+        if (i == (int)(Loop_GetRelPos() * 32.0f))
         {
             Serial.printf("O");
         }
@@ -189,7 +187,7 @@ void Status_PrintAll(void)
     Serial.printf("Click: <");
     for (int i = 0; i < 16; i++)
     {
-        if ( i == (int)(Click_GetRelPos() * 32.0f))
+        if (i == (int)(Click_GetRelPos() * 32.0f))
         {
             Serial.printf("%d", (i % 4) + 1);
         }
@@ -226,6 +224,7 @@ void Status_Process(void)
 void Status_ValueChangedFloat(const char *descr, float value)
 {
     status_cnt = 0;
+    memset(statusMsg, 0, sizeof(statusMsg));
     sprintf(statusMsg, "%s: %0.2f", descr, value);
 }
 
@@ -235,6 +234,7 @@ void Status_ValueChangedFloat(const char *descr, float value)
 void Status_ValueChangedInt(const char *descr, int value)
 {
     status_cnt = 0;
+    memset(statusMsg, 0, sizeof(statusMsg));
     sprintf(statusMsg, "%s: %d", descr, value);
 }
 
@@ -244,5 +244,6 @@ void Status_ValueChangedInt(const char *descr, int value)
 void Status_TestMsg(const char *text)
 {
     status_cnt = 0;
+    memset(statusMsg, 0, sizeof(statusMsg));
     sprintf(statusMsg, "%s", text);
 }

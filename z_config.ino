@@ -39,6 +39,10 @@
  *      Author: Marcel Licence
  */
 
+#ifdef AUDIO_KIT_BUTTON_ANALOG
+audioKitButtonCb audioKitButtonCallback = App_ButtonCb;
+#endif
+
 /*
  * this mapping is used for the edirol pcr-800
  * this should be changed when using another controller
@@ -109,11 +113,7 @@ struct midiControllerMapping edirolMapping[] =
     { 0x0, 0x12, "R9", NULL, Loop_SetChannelGainIn, 0},
 
     /* Central slider */
-#ifndef AS5600_ENABLED
-    // { 0x0, 0x13, "H1", NULL, App_SetBrightness, 0},
-#else
-    { 0x0, 0x13, "H1", NULL, Sampler_ScratchFader, 0},
-#endif
+    { 0x0, 0x13, "H1", NULL, NULL, 0},
 };
 
 

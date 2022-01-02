@@ -1,6 +1,4 @@
 /*
- * The GNU GENERAL PUBLIC LICENSE (GNU GPLv3)
- *
  * Copyright (c) 2021 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
@@ -38,16 +36,16 @@
  * Author: Marcel Licence
  */
 
-#define SEQ_TRACK_CNT	12
-#define SEQ_STEPS		16
+#define SEQ_TRACK_CNT   12
+#define SEQ_STEPS       16
 
 /*
  * 1: only 4th notes
  * 2: for 8th notes
  */
-#define SEQ_SUBSTEP_MUL	2
+#define SEQ_SUBSTEP_MUL 2
 
-#define DEFAULT_BPM		140
+#define DEFAULT_BPM     140
 
 uint32_t seq_prescaler = 60.0f * 44100.0f / (2.0f * SEQ_SUBSTEP_MUL * (float)DEFAULT_BPM);
 uint32_t seq_prescaler_next = 0;

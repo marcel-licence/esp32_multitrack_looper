@@ -8,3 +8,13 @@ The project has been tested on the ESP32 Audio Kit V2.2
 
 Useful documents:
 ESP32 Audio Kit docu: http://myosuploads3.banggood.com/products/20210306/20210306011116instruction.pdf
+ 
+---
+The latest update has been tested on the ESP32 Audio Kit V2.2 with an ES8388 audio codec.
+You can use it stand-alone when applied the analog button mod (https://youtu.be/r0af0DB1R68)
+Default configuration:
+- Key1: set length
+- Key2: toggle click
+- Key3 - Key6: toggle rec mode
+
+I recommend using Tera Term or another VT100 compatible tool to see whats going on inside of the application

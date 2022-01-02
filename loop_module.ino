@@ -1,6 +1,4 @@
 /*
- * The GNU GENERAL PUBLIC LICENSE (GNU GPLv3)
- *
  * Copyright (c) 2021 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
@@ -44,8 +42,8 @@
  * all PSRAM memory will be used
  * if values are set to big the startup of the firmware will fail
  */
-#define MAX_LOOP	513246
-#define TRACK_CNT	4
+#define MAX_LOOP    513246
+#define TRACK_CNT   4
 
 int16_t *loopLine[TRACK_CNT];
 float loopGainOut[TRACK_CNT];
@@ -98,7 +96,7 @@ void Loop_init(void)
     Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
 
-    loopGainIn = 0.0f;
+    loopGainIn = 1.0f;
     loopInCh = 0;
 
     Serial.printf("Loop Max Length: %0.0f seconds\n", ((float)MAX_LOOP) / 44100.0f);
@@ -113,7 +111,7 @@ float loopSpeed = 1.0f;
 
 uint32_t loopSubCnt = 0;
 
-#define absf(a)	(a>0)?a:(-a)
+#define absf(a) (a>0)?a:(-a)
 
 /*
  * this function processes the input audio and mixes also the audio output to the signal
@@ -122,8 +120,8 @@ void Loop_Process(float *signal_l, float *signal_r)
 {
     float tempL = 0.0f, tempR = 0.0f;
 
-    loopMeter[TRACK_CNT] = max(absf(*signal_l), loopMeter[TRACK_CNT] );
-    loopMeter[TRACK_CNT] = max(absf(*signal_r), loopMeter[TRACK_CNT] );
+    loopMeter[TRACK_CNT] = max(absf(*signal_l), loopMeter[TRACK_CNT]);
+    loopMeter[TRACK_CNT] = max(absf(*signal_r), loopMeter[TRACK_CNT]);
 
     loopSubCnt++;
 
@@ -210,8 +208,8 @@ void Loop_Process(float *signal_l, float *signal_r)
     /*
      * get max value of left and right channel
      */
-    loopMeter[TRACK_CNT + 1] = max(absf(*signal_l), loopMeter[TRACK_CNT + 1] );
-    loopMeter[TRACK_CNT + 1] = max(absf(*signal_r), loopMeter[TRACK_CNT + 1] );
+    loopMeter[TRACK_CNT + 1] = max(absf(*signal_l), loopMeter[TRACK_CNT + 1]);
+    loopMeter[TRACK_CNT + 1] = max(absf(*signal_r), loopMeter[TRACK_CNT + 1]);
 
     Loop_ProcessButton();
 }

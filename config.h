@@ -51,16 +51,20 @@
 #include <cdt.h>
 #endif
 
+#define MIDI_RECV_FROM_SERIAL
+#define AUDIO_KIT_BUTTON_ANALOG
+
 /*
  * include the board configuration
  * there you will find the most hardware depending pin settings
  */
-#define BOARD_ESP32_AUDIO_KIT_AC101
+#define BOARD_ESP32_AUDIO_KIT_ES8388
 
 #include <ml_boards.h> /* requires https://github.com/marcel-licence/ML_SynthTools */
 
 /* our samplerate */
 #define SAMPLE_RATE 44100
+
 
 /* on board led */
 #define LED_PIN     19
