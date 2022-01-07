@@ -1,5 +1,31 @@
 /*
  * Copyright (c) 2021 Marcel Licence
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * Dieses Programm ist Freie Software: Sie können es unter den Bedingungen
+ * der GNU General Public License, wie von der Free Software Foundation,
+ * Version 3 der Lizenz oder (nach Ihrer Wahl) jeder neueren
+ * veröffentlichten Version, weiter verteilen und/oder modifizieren.
+ *
+ * Dieses Programm wird in der Hoffnung bereitgestellt, dass es nützlich sein wird, jedoch
+ * OHNE JEDE GEWÄHR,; sogar ohne die implizite
+ * Gewähr der MARKTFÄHIGKEIT oder EIGNUNG FÜR EINEN BESTIMMTEN ZWECK.
+ * Siehe die GNU General Public License für weitere Einzelheiten.
+ *
+ * Sie sollten eine Kopie der GNU General Public License zusammen mit diesem
+ * Programm erhalten haben. Wenn nicht, siehe <https://www.gnu.org/licenses/>.
  */
 
 /**
@@ -33,55 +59,18 @@ const i2s_port_t i2s_port_number = I2S_NUM_0;
  * for the following implementation
  */
 #ifdef I2S_NODAC
-
-bool writeDAC(float DAC_f);
-bool i2s_write_sample(uint32_t sample);
-
-bool i2s_write_sample(uint32_t sample)
-{
-    static size_t bytes_written = 0;
-    i2s_write(i2s_port_number, (const char *)&sample, 4, &bytes_written, portMAX_DELAY);
-
-    if (bytes_written > 0)
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
-
-static uint32_t i2sACC;
-static uint16_t err;
-
-bool writeDAC(float DAC_f)
-{
-    uint16_t DAC = 0x8000 + int16_t(DAC_f * 32767.0f);
-    for (uint8_t i = 0; i < 32; i++)
-    {
-        i2sACC = i2sACC << 1;
-        if (DAC >= err)
-        {
-            i2sACC |= 1;
-            err += 0xFFFF - DAC;
-        }
-        else
-        {
-            err -= DAC;
-        }
-    }
-    bool ret = i2s_write_sample(i2sACC);
-
-    return ret;
-}
-
+/* todo integrate code, or external module from hack a day using i2s signal wire as DAC */
 #else
 
-bool i2s_write_sample_32ch2(uint64_t sample)
+bool i2s_write_sample_32ch2(uint8_t *sample);
+
+bool i2s_write_sample_32ch2(uint8_t *sample)
 {
     static size_t bytes_written = 0;
-    i2s_write((i2s_port_t)i2s_port_number, (const char *)&sample, 8, &bytes_written, portMAX_DELAY);
+    static size_t bytes_read = 0;
+    i2s_read(i2s_port_number, (char *)sample, 8, &bytes_read, portMAX_DELAY);
+
+    i2s_write(i2s_port_number, (const char *)sample, 8, &bytes_written, portMAX_DELAY);
 
     if (bytes_written > 0)
     {
@@ -92,6 +81,29 @@ bool i2s_write_sample_32ch2(uint64_t sample)
         return false;
     }
 }
+
+#ifdef SAMPLE_SIZE_24BIT
+
+bool i2s_write_sample_24ch2(uint8_t *sample);
+
+bool i2s_write_sample_24ch2(uint8_t *sample)
+{
+    static size_t bytes_written1 = 0;
+    static size_t bytes_written2 = 0;
+    i2s_write(i2s_port_number, (const char *)&sample[1], 3, &bytes_written1, portMAX_DELAY);
+    i2s_write(i2s_port_number, (const char *)&sample[5], 3, &bytes_written2, portMAX_DELAY);
+
+    if ((bytes_written1 + bytes_written2) > 0)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+#endif
 
 bool i2s_write_stereo_samples(float *fl_sample, float *fr_sample)
 {
@@ -191,19 +203,6 @@ bool i2s_write_stereo_samples_buff(float *fl_sample, float *fr_sample, const int
 
     for (int n = 0; n < buffLen; n++)
     {
-#ifdef ES8388_ENABLED
-        /*
-         * using LEFT_RIGHT format
-         */
-#ifdef SAMPLE_SIZE_16BIT
-        sampleDataU[n].ch[1] = int16_t(fr_sample[n] * 16383.0f); /* some bits missing here */
-        sampleDataU[n].ch[0] = int16_t(fl_sample[n] * 16383.0f);
-#endif
-#ifdef SAMPLE_SIZE_32BIT
-        sampleDataU[n].ch[1] = int32_t(fr_sample[n] * 1073741823.0f); /* some bits missing here */
-        sampleDataU[n].ch[0] = int32_t(fl_sample[n] * 1073741823.0f);
-#endif
-#else
         /*
          * using RIGHT_LEFT format
          */
@@ -215,14 +214,11 @@ bool i2s_write_stereo_samples_buff(float *fl_sample, float *fr_sample, const int
         sampleDataU[n].ch[0] = int32_t(fr_sample[n] * 1073741823.0f); /* some bits missing here */
         sampleDataU[n].ch[1] = int32_t(fl_sample[n] * 1073741823.0f);
 #endif
-#endif
     }
 
     static size_t bytes_written = 0;
 
-    calcCycleCountPre();
     i2s_write(i2s_port_number, (const char *)&sampleDataU[0].sample, 4 * buffLen, &bytes_written, portMAX_DELAY);
-    calcCycleCount();
 
     if (bytes_written > 0)
     {
@@ -233,7 +229,7 @@ bool i2s_write_stereo_samples_buff(float *fl_sample, float *fr_sample, const int
         return false;
     }
 }
-#endif
+#endif /* #ifdef SAMPLE_BUFFER_SIZE */
 
 void i2s_read_stereo_samples(float *fl_sample, float *fr_sample)
 {
@@ -272,12 +268,12 @@ void i2s_read_stereo_samples_buff(float *fl_sample, float *fr_sample, const int 
     } sampleData[SAMPLE_BUFFER_SIZE];
 #endif
 
-    i2s_read(i2s_port_number, (char *)&sampleData[0].sample, 4 * SAMPLE_BUFFER_SIZE, &bytes_read, portMAX_DELAY);
+    i2s_read(i2s_port_number, (char *)&sampleData[0].sample, 4 * buffLen, &bytes_read, portMAX_DELAY);
 
     //sampleData.ch[0] &= 0xFFFE;
     //sampleData.ch[1] &= 0;
 
-    for (int n = 0; n < SAMPLE_BUFFER_SIZE; n++)
+    for (int n = 0; n < buffLen; n++)
     {
         /*
          * using RIGHT_LEFT format
@@ -289,7 +285,7 @@ void i2s_read_stereo_samples_buff(float *fl_sample, float *fr_sample, const int 
     }
 #endif
 }
-#endif
+#endif /* #ifdef SAMPLE_BUFFER_SIZE */
 
 #endif
 
@@ -329,7 +325,6 @@ i2s_config_t i2s_configuration =
 #else
     .use_apll = false,
 #endif
-    // .fixed_mclk = (44100 * 256),
 };
 
 

@@ -105,13 +105,15 @@ struct midiControllerMapping edirolMapping[] =
     { 0x2, 0x10, "R3", NULL, Loop_SetChannelPan, 2},
     { 0x3, 0x10, "R4", NULL, Loop_SetChannelPan, 3},
 
-    { 0x4, 0x10, "R5", NULL, NULL, 0},
+    { 0x4, 0x10, "R5", NULL, Loop_SetChannelGainIn, 0},
     { 0x5, 0x10, "R6", NULL, NULL, 0},
     { 0x6, 0x10, "R7", NULL, Click_SetTempo, 0},
     { 0x7, 0x10, "R8", NULL, Loop_SetSpeed, 0},
-
-    { 0x0, 0x12, "R9", NULL, Loop_SetChannelGainIn, 0},
-
+#ifdef REVERB_ENABLED
+    { 0x0, 0x12, "R9", NULL, Reverb_SetLevel, 0},
+#else
+    { 0x0, 0x12, "R9", NULL, NULL, 0},
+#endif
     /* Central slider */
     { 0x0, 0x13, "H1", NULL, NULL, 0},
 };

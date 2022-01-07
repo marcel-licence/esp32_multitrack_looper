@@ -73,6 +73,15 @@
  */
 
 
+#include <ml_delay.h>
+#ifdef REVERB_ENABLED
+#include <ml_reverb.h>
+#endif
+#ifdef OLED_OSC_DISP_ENABLED
+#include <ml_scope.h>
+#endif
+
+
 /* to avoid the high click when turning on the microphone */
 static float click_supp_gain = 0.0f;
 
@@ -97,40 +106,25 @@ void setup()
 #endif
     Status_Setup();
 
-#ifdef ESP32_AUDIO_KIT
-#ifdef ES8388_ENABLED
-    ES8388_Setup();
-    ES8388_SetIn2OoutVOL(0, 0);
-#else
-    ac101_setup();
-    /* using mic as default source */
-    ac101_setSourceMic();
-#endif
-#endif
+    Audio_Setup();
 
-    setup_i2s();
 #ifdef ESP32_AUDIO_KIT
     button_setup();
 #endif
+
+    /*
+     * Prepare a buffer which can be used for the delay
+     */
+    psramInit();
+    int16_t *lineL = (int16_t *)malloc(sizeof(int16_t) * MAX_DELAY);
+    int16_t *lineR = (int16_t *)ps_malloc(sizeof(int16_t) * MAX_DELAY);
+    Delay_Init2(lineL, lineR, MAX_DELAY);
 
     /*
      * setup midi module / rx port
      */
     Midi_Setup();
 
-#if 0
-    setup_wifi();
-#else
-    WiFi.mode(WIFI_OFF);
-#endif
-
-#ifndef ESP8266
-    btStop();
-    // esp_wifi_deinit();
-#endif
-
-    Delay_Init();
-    Delay_Reset();
 
     Loop_init();
 
@@ -158,7 +152,7 @@ void setup()
  * Core 0
  */
 /* this is used to add a task to core 0 */
-TaskHandle_t Core0TaskHnd ;
+TaskHandle_t Core0TaskHnd;
 
 inline
 void Core0TaskInit()
@@ -170,6 +164,13 @@ void Core0TaskInit()
 inline
 void Core0TaskSetup()
 {
+    /*
+     * init your stuff for core0 here
+     */
+
+#ifdef OLED_OSC_DISP_ENABLED
+    ScopeOled_Setup();
+#endif
 
 }
 
@@ -178,6 +179,15 @@ void Core0TaskLoop()
 {
     Status_Process();
     button_loop();
+
+    static uint8_t cnt = 0;
+    cnt++;
+    if (cnt % 8 == 0)
+    {
+#ifdef OLED_OSC_DISP_ENABLED
+        ScopeOled_Process();
+#endif
+    }
 }
 
 void Core0Task(void *parameter)
@@ -247,16 +257,16 @@ void Synth_SetSlider(uint8_t channel, float value)
 #endif
 
     case 4:
-        Delay_SetInputLevel(value);
+        //Delay_SetInputLevel(0, value);
         break;
     case 5:
-        Delay_SetFeedback(value);
+        Delay_SetFeedback(0, value);
         break;
     case 6:
-        Delay_SetLevel(value);
+        Delay_SetOutputLevel(0, value);
         break;
     case 7:
-        Delay_SetLength(value);
+        Delay_SetLength(0, value);
         break;
     default:
         //  Serial.printf("slider not connected!\n");
@@ -308,60 +318,69 @@ void MTLooper_ToggleSource(uint8_t channel, float value)
 static float fl_offset = 0.0f;
 static float fr_offset = 0.0f;
 
+#define SAMPLE_BUFFER_SIZE  48
+
+static float fl_sample[SAMPLE_BUFFER_SIZE], fr_sample[SAMPLE_BUFFER_SIZE];
+
+
 /*
  * the main audio task
  */
 inline void audio_task()
 {
-    static float fl_sample, fr_sample;
+    memset(fl_sample, 0, sizeof(fl_sample));
+    memset(fr_sample, 0, sizeof(fr_sample));
 
-    fl_sample = 0.0f;
-    fr_sample = 0.0f;
+    Audio_Input(fl_sample, fr_sample);
 
-    i2s_read_stereo_samples(&fl_sample, &fr_sample);
-
-    fl_sample *= click_supp_gain;
-    fr_sample *= click_supp_gain;
-
-    if (click_supp_gain < 1.0f)
+    for (int  i = 0; i < SAMPLE_BUFFER_SIZE; i++)
     {
-        click_supp_gain += 0.00001f;
+        fl_sample[i] *= click_supp_gain;
+        fr_sample[i] *= click_supp_gain;
+
+        if (click_supp_gain < 1.0f)
+        {
+            click_supp_gain += 0.00001f;
+        }
+        else
+        {
+            click_supp_gain = 1.0f;
+        }
+
+        fl_offset = fl_offset * 0.99 + fl_sample[i] * 0.01;
+        fr_offset = fr_offset * 0.99 + fr_sample[i] * 0.01;
+
+        fl_sample[i] -= fl_offset;
+        fr_sample[i] -= fr_offset;
+
+        /*
+         * main loop core
+         */
+        Loop_Process(&fl_sample[i], &fr_sample[i]);
     }
-    else
-    {
-        click_supp_gain = 1.0f;
-    }
-
-    fl_offset = fl_offset * 0.99 + fl_sample * 0.01;
-    fr_offset = fr_offset * 0.99 + fr_sample * 0.01;
-
-    fl_sample -= fl_offset;
-    fr_sample -= fr_offset;
-
-    /*
-     * main loop core
-     */
-    Loop_Process(&fl_sample, &fr_sample);
 
     /*
      * little simple delay effect
      */
-    Delay_Process(&fl_sample, &fr_sample);
+    Delay_Process_Buff2(fl_sample, fr_sample, SAMPLE_BUFFER_SIZE);
 
-    /*
-     * processing of click/metronom/tempo
-     */
-    Click_Process(&fl_sample, &fr_sample);
-
-    /* apply main_gain */
-    fl_sample *= main_gain;
-    fr_sample *= main_gain;
-
-    /* function blocks and returns when sample is put into buffer */
-    if (i2s_write_stereo_samples(&fl_sample, &fr_sample))
+    for (int  i = 0; i < SAMPLE_BUFFER_SIZE; i++)
     {
-        /* nothing for here */
+        /*
+         * processing of click/metronom/tempo
+         */
+        Click_Process(&fl_sample[i], &fr_sample[i]);
+
+        /* apply main_gain */
+        fl_sample[i] *= main_gain;
+        fr_sample[i] *= main_gain;
     }
+
+    Audio_Output(fl_sample, fr_sample);
+
+#ifdef OLED_OSC_DISP_ENABLED
+    ScopeOled_AddSamples(fl_sample, fr_sample, SAMPLE_BUFFER_SIZE);
+#endif
 }
 
 /*

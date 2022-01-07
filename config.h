@@ -47,23 +47,35 @@
 #define CONFIG_H_
 
 
-#ifdef __CDT_PARSER__
-#include <cdt.h>
-#endif
+//#define BOARD_ML_V1 /* activate this when using the ML PCB V1 */
+//#define BOARD_ESP32_AUDIO_KIT_AC101 /* activate this when using the ESP32 Audio Kit v2.2 with the AC101 codec */
+#define BOARD_ESP32_AUDIO_KIT_ES8388 /* activate this when using the ESP32 Audio Kit v2.2 with the ES8388 codec */
+//#define BOARD_ESP32_DOIT /* activate this when using the DOIT ESP32 DEVKIT V1 board */
 
+
+/* you can receive MIDI messages via serial-USB connection */
+/*
+ * you could use for example https://projectgus.github.io/hairless-midiserial/
+ * to connect your MIDI device via computer to the serial port
+ */
 #define MIDI_RECV_FROM_SERIAL
+
+/* use this to display a scope on the oled display */
+//#define OLED_OSC_DISP_ENABLED
+
 #define AUDIO_KIT_BUTTON_ANALOG
 
 /*
  * include the board configuration
  * there you will find the most hardware depending pin settings
  */
-#define BOARD_ESP32_AUDIO_KIT_ES8388
-
 #include <ml_boards.h> /* requires https://github.com/marcel-licence/ML_SynthTools */
 
 /* our samplerate */
 #define SAMPLE_RATE 44100
+
+/* this variable defines the max length of the delay and also the memory consumption */
+#define MAX_DELAY   SAMPLE_RATE /* 1s -> @ 44100 samples */
 
 
 /* on board led */
