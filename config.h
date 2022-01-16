@@ -74,6 +74,8 @@
 /* our samplerate */
 #define SAMPLE_RATE 44100
 
+#define SAMPLE_BUFFER_SIZE  48
+
 /* this variable defines the max length of the delay and also the memory consumption */
 #define MAX_DELAY   SAMPLE_RATE /* 1s -> @ 44100 samples */
 

@@ -171,7 +171,6 @@ void Core0TaskSetup()
 #ifdef OLED_OSC_DISP_ENABLED
     ScopeOled_Setup();
 #endif
-
 }
 
 inline
@@ -257,7 +256,7 @@ void Synth_SetSlider(uint8_t channel, float value)
 #endif
 
     case 4:
-        //Delay_SetInputLevel(0, value);
+        // Delay_SetInputLevel0,(value);
         break;
     case 5:
         Delay_SetFeedback(0, value);
@@ -318,7 +317,7 @@ void MTLooper_ToggleSource(uint8_t channel, float value)
 static float fl_offset = 0.0f;
 static float fr_offset = 0.0f;
 
-#define SAMPLE_BUFFER_SIZE  48
+
 
 static float fl_sample[SAMPLE_BUFFER_SIZE], fr_sample[SAMPLE_BUFFER_SIZE];
 
