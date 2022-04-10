@@ -73,6 +73,7 @@
  */
 
 
+/* requires the ML_SynthTools library: https://github.com/marcel-licence/ML_SynthTools */
 #include <ml_delay.h>
 #ifdef REVERB_ENABLED
 #include <ml_reverb.h>
@@ -139,6 +140,15 @@ void setup()
     /* PSRAM will be fully used by the looper */
     Serial.printf("Total PSRAM: %d\n", ESP.getPsramSize());
     Serial.printf("Free PSRAM: %d\n", ESP.getFreePsram());
+
+    if (ESP.getPsramSize() == 0)
+    {
+        Serial.printf("PSRAM is required for this project!\nPlease ensure that it is enabled in arduino and also supported by your ESP32 controller.");
+        while (true)
+        {
+            sleep(1000);
+        }
+    }
 
 #ifdef ESP32
     Core0TaskInit();
