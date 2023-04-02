@@ -128,6 +128,7 @@ struct midiMapping_s midiMapping =
     NULL,
     NULL,
     NULL,
+    NULL,
     edirolMapping,
     sizeof(edirolMapping) / sizeof(edirolMapping[0]),
 };

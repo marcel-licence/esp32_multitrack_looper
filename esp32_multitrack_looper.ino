@@ -83,6 +83,11 @@
 #endif
 
 
+#define ML_SYNTH_INLINE_DECLARATION
+#include <ml_inline.h>
+#undef ML_SYNTH_INLINE_DECLARATION
+
+
 /* to avoid the high click when turning on the microphone */
 static float click_supp_gain = 0.0f;
 

@@ -47,6 +47,9 @@
 #define CONFIG_H_
 
 
+#define SERIAL_BAUDRATE	115200
+
+
 //#define BOARD_ML_V1 /* activate this when using the ML PCB V1 */
 //#define BOARD_ESP32_AUDIO_KIT_AC101 /* activate this when using the ESP32 Audio Kit v2.2 with the AC101 codec */
 #define BOARD_ESP32_AUDIO_KIT_ES8388 /* activate this when using the ESP32 Audio Kit v2.2 with the ES8388 codec */
@@ -69,7 +72,7 @@
  * include the board configuration
  * there you will find the most hardware depending pin settings
  */
-#include <ml_boards.h> /* requires https://github.com/marcel-licence/ML_SynthTools */
+#include <ml_boards.h> /* requires the ML_Synth library:  https://github.com/marcel-licence/ML_SynthTools */
 
 /* our samplerate */
 #define SAMPLE_RATE 44100
@@ -81,7 +84,7 @@
 
 
 /* on board led */
-#define LED_PIN     19
+#define BLINK_LED_PIN     19
 
 
 #endif /* CONFIG_H_ */
