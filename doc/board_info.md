@@ -7,8 +7,8 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 2.0.0<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 725241 bytes<br />
-<b>Dynamic memory:</b> 48892 bytes<br />
+<b>Program storage space:</b> 719577 bytes<br />
+<b>Dynamic memory:</b> 41324 bytes<br />
 <br />
 <b>PSRAM:</b> Enabled<br />
 <b>Partition Scheme:</b> Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)<br />
@@ -53,16 +53,16 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>Adafruit GFX Library</td>
-        <td>1.10.10</td>
+        <td>1.11.5</td>
         <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
-        <td></td>
+        <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
         <td>False</td>
     </tr>
     <tr>
-        <td>Adafruit SSD1306</td>
-        <td>2.4.5</td>
-        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
-        <td></td>
+        <td>Adafruit BusIO</td>
+        <td>1.14.1</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
         <td>False</td>
     </tr>
     <tr>
@@ -73,10 +73,10 @@ Below you will find a list of build which can be configured and should compile w
         <td>True</td>
     </tr>
     <tr>
-        <td>Adafruit BusIO</td>
-        <td>1.14.1</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>Adafruit SSD1306</td>
+        <td>2.5.7</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
         <td>False</td>
     </tr>
 </table><hr>
@@ -84,8 +84,8 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 2.0.7<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 789277 bytes<br />
-<b>Dynamic memory:</b> 53536 bytes<br />
+<b>Program storage space:</b> 783609 bytes<br />
+<b>Dynamic memory:</b> 45976 bytes<br />
 <br />
 <b>JTAG Adapter:</b> Disabled<br />
 <b>PSRAM:</b> Enabled<br />
@@ -132,16 +132,16 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>Adafruit GFX Library</td>
-        <td>1.10.10</td>
+        <td>1.11.5</td>
         <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
-        <td></td>
+        <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
         <td>False</td>
     </tr>
     <tr>
-        <td>Adafruit SSD1306</td>
-        <td>2.4.5</td>
-        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
-        <td></td>
+        <td>Adafruit BusIO</td>
+        <td>1.14.1</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
         <td>False</td>
     </tr>
     <tr>
@@ -152,10 +152,10 @@ Below you will find a list of build which can be configured and should compile w
         <td>True</td>
     </tr>
     <tr>
-        <td>Adafruit BusIO</td>
-        <td>1.14.1</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>Adafruit SSD1306</td>
+        <td>2.5.7</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
         <td>False</td>
     </tr>
 </table><hr>
@@ -163,8 +163,8 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 1.0.6<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 769954 bytes<br />
-<b>Dynamic memory:</b> 49272 bytes<br />
+<b>Program storage space:</b> 764298 bytes<br />
+<b>Dynamic memory:</b> 41720 bytes<br />
 <br />
 <b>PSRAM:</b> Enabled<br />
 <b>Partition Scheme:</b> Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)<br />
@@ -207,16 +207,16 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>Adafruit GFX Library</td>
-        <td>1.10.10</td>
+        <td>1.11.5</td>
         <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
-        <td></td>
+        <td>https://github.com/adafruit/Adafruit-GFX-Library</td>
         <td>False</td>
     </tr>
     <tr>
-        <td>Adafruit SSD1306</td>
-        <td>2.4.5</td>
-        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
-        <td></td>
+        <td>Adafruit BusIO</td>
+        <td>1.14.1</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>https://github.com/adafruit/Adafruit_BusIO</td>
         <td>False</td>
     </tr>
     <tr>
@@ -227,10 +227,10 @@ Below you will find a list of build which can be configured and should compile w
         <td>True</td>
     </tr>
     <tr>
-        <td>Adafruit BusIO</td>
-        <td>1.14.1</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
-        <td>https://github.com/adafruit/Adafruit_BusIO</td>
+        <td>Adafruit SSD1306</td>
+        <td>2.5.7</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
+        <td>https://github.com/adafruit/Adafruit_SSD1306</td>
         <td>False</td>
     </tr>
 </table>
