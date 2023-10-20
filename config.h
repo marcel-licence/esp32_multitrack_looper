@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Marcel Licence
+ * Copyright (c) 2023 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@
 #define CONFIG_H_
 
 
-#define SERIAL_BAUDRATE	115200
+#define SERIAL_BAUDRATE 115200
 
 
 //#define BOARD_ML_V1 /* activate this when using the ML PCB V1 */

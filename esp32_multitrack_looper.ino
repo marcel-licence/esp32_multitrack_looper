@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Marcel Licence
+ * Copyright (c) 2023 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -283,7 +283,7 @@ void Synth_SetSlider(uint8_t channel, float value)
         Delay_SetLength(0, value);
         break;
     default:
-        //  Serial.printf("slider not connected!\n");
+        // Serial.printf("slider not connected!\n");
         break;
     }
 }
@@ -333,7 +333,6 @@ static float fl_offset = 0.0f;
 static float fr_offset = 0.0f;
 
 
-
 static float fl_sample[SAMPLE_BUFFER_SIZE], fr_sample[SAMPLE_BUFFER_SIZE];
 
 
@@ -347,7 +346,7 @@ inline void audio_task()
 
     Audio_Input(fl_sample, fr_sample);
 
-    for (int  i = 0; i < SAMPLE_BUFFER_SIZE; i++)
+    for (int i = 0; i < SAMPLE_BUFFER_SIZE; i++)
     {
         fl_sample[i] *= click_supp_gain;
         fr_sample[i] *= click_supp_gain;
@@ -378,7 +377,7 @@ inline void audio_task()
      */
     Delay_Process_Buff2(fl_sample, fr_sample, SAMPLE_BUFFER_SIZE);
 
-    for (int  i = 0; i < SAMPLE_BUFFER_SIZE; i++)
+    for (int i = 0; i < SAMPLE_BUFFER_SIZE; i++)
     {
         /*
          * processing of click/metronom/tempo

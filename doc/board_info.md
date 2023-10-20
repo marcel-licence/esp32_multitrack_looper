@@ -7,8 +7,8 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 2.0.0<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 719577 bytes<br />
-<b>Dynamic memory:</b> 41324 bytes<br />
+<b>Program storage space:</b> 720193 bytes<br />
+<b>Dynamic memory:</b> 41244 bytes<br />
 <br />
 <b>PSRAM:</b> Enabled<br />
 <b>Partition Scheme:</b> Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)<br />
@@ -32,7 +32,7 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>ML SynthTools</td>
-        <td>1.0.1</td>
+        <td>1.1.0</td>
         <td>https://github.com/marcel-licence/ML_SynthTools</td>
         <td>https://github.com/marcel-licence/ML_SynthTools.git</td>
         <td>False</td>
@@ -84,7 +84,7 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 2.0.7<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 783609 bytes<br />
+<b>Program storage space:</b> 784517 bytes<br />
 <b>Dynamic memory:</b> 45976 bytes<br />
 <br />
 <b>JTAG Adapter:</b> Disabled<br />
@@ -111,7 +111,7 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>ML SynthTools</td>
-        <td>1.0.1</td>
+        <td>1.1.0</td>
         <td>https://github.com/marcel-licence/ML_SynthTools</td>
         <td>https://github.com/marcel-licence/ML_SynthTools.git</td>
         <td>False</td>
@@ -163,8 +163,8 @@ Below you will find a list of build which can be configured and should compile w
 <b>Version:</b> 1.0.6<br />
 <b>Board:</b> ESP32 Dev Module<br />
 <br />
-<b>Program storage space:</b> 764298 bytes<br />
-<b>Dynamic memory:</b> 41720 bytes<br />
+<b>Program storage space:</b> 764934 bytes<br />
+<b>Dynamic memory:</b> 41640 bytes<br />
 <br />
 <b>PSRAM:</b> Enabled<br />
 <b>Partition Scheme:</b> Default 4MB with spiffs (1.2MB APP/1.5MB SPIFFS)<br />
@@ -186,7 +186,7 @@ Below you will find a list of build which can be configured and should compile w
     </tr>
     <tr>
         <td>ML SynthTools</td>
-        <td>1.0.1</td>
+        <td>1.1.0</td>
         <td>https://github.com/marcel-licence/ML_SynthTools</td>
         <td>https://github.com/marcel-licence/ML_SynthTools.git</td>
         <td>False</td>
