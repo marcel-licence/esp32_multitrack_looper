@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2023 Marcel Licence
+ * Copyright (c) 2025 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -92,12 +92,12 @@
 static float click_supp_gain = 0.0f;
 
 /* this application starts here */
-void setup()
+void setup(void)
 {
     // put your setup code here, to run once:
     delay(500);
 
-    Serial.begin(115200);
+    Serial.begin(SERIAL_BAUDRATE);
 
     Serial.println();
 

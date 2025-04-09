@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2021 Marcel Licence
+ * Copyright (c) 2025 Marcel Licence
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -75,7 +75,7 @@ void Loop_init(void)
         if (loopLine[n] == NULL)
         {
             /* when you see the message the count of TRACK_CNT is too high or MAX_LOOP is too big */
-            Serial.printf("not enough memory!\n");
+            Serial.printf("not enough memory!\nPlease reduce the number of MAX_LOOP or TRACK_CNT!\n");
             return;
         }
         else
