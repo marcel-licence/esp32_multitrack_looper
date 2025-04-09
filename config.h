@@ -83,8 +83,11 @@
 #define MAX_DELAY   SAMPLE_RATE /* 1s -> @ 44100 samples */
 
 
+/* BLINK_LED might be defined by the selected board */
+#ifndef BLINK_LED_PIN
 /* on board led */
 #define BLINK_LED_PIN     19
+#endif
 
 
 #endif /* CONFIG_H_ */
